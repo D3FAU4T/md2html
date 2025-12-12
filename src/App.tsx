@@ -39,13 +39,25 @@ export function App() {
 
     const handleFileInput = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
-            const files = Array.from(e.target.files);
+            const files = Array.from(e.target.files).filter(
+                file => file.name.endsWith('.md') || file.name.endsWith('.markdown')
+            );
             await processFiles(files);
         }
     };
 
     const processFiles = async (files: File[]) => {
-        for (const file of files) {
+        // Extra validation to ensure only .md files are processed
+        const markdownFiles = files.filter(
+            file => file.name.endsWith('.md') || file.name.endsWith('.markdown')
+        );
+
+        if (markdownFiles.length === 0) {
+            alert('Please upload only Markdown files (.md or .markdown)');
+            return;
+        }
+
+        for (const file of markdownFiles) {
             const text = await file.text();
             const html = await mdToHTML(text);
 
