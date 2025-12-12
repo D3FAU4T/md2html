@@ -65,8 +65,9 @@ main {
 aside {
     background-color: var(--md-sys-color-background);
     padding: 30px;
-    border-radius: 2rem;
+    border-radius: 1rem;
     min-width: 10rem;
+    overflow: hidden;
 }
 
 aside>p:first-child {
@@ -125,6 +126,10 @@ header>a {
 }
 
 header>md-list-item {
+    border-radius: 15px;
+}
+
+#hamBtn {
     border-radius: 15px;
 }
 
@@ -296,6 +301,10 @@ md-list-item {
     cursor: pointer;
 }
 
+md-list-item.active {
+    background-color: var(--md-sys-color-primary);
+}
+
 md-list-item>p {
     margin: 0px;
 }
@@ -353,6 +362,7 @@ pre>code::-webkit-scrollbar-thumb {
     overflow-y: auto;
     max-height: 100%;
     scroll-behavior: smooth;
+    /* box-sizing: border-box; */
 }
 
 .overview>p:first-child {

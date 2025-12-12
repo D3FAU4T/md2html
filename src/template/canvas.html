@@ -239,7 +239,8 @@
             mdListItem.setAttribute('onclick', `showSection(\`${contentID}\`)`);
 
             const p = document.createElement('p');
-            p.textContent = contentID.replace('content-', '');
+            // Display cleaned filename
+            p.textContent = contentID.replace('content-', '').replace(/-/g, ' ');
             mdListItem.appendChild(p);
 
             const span = document.createElement('span');
@@ -255,50 +256,56 @@
             const summaryUL = overview.querySelector('ul');
             summaryUL.innerHTML = '';
 
-            for (const section of sections) {
+            const visibleSection = Array.from(sections).find(s => s.style.display === 'block');
 
-                // Pre-process the elements
-                const h2Elements = section.querySelectorAll('h2');
-                for (let i = 0; i < h2Elements.length; i++) {
-                    const h2Element = h2Elements[i];
-                    const h2ElementClass = h2Element.classList;
-                    if (!h2ElementClass.contains('color-accent'))
-                        h2Element.classList.add('color-accent');
+            if (!visibleSection) return;
 
-                    if (!h2ElementClass.contains('summary'))
-                        h2Element.classList.add('summary');
+            // Pre-process the elements
+            const h2Elements = visibleSection.querySelectorAll('h2');
+            for (let i = 0; i < h2Elements.length; i++) {
+                const h2Element = h2Elements[i];
+                const h2ElementClass = h2Element.classList;
+                if (!h2ElementClass.contains('color-accent'))
+                    h2Element.classList.add('color-accent');
 
-                    if (!h2Element.hasAttribute('data-summary'))
-                        h2Element.setAttribute('data-summary', h2Element.textContent.replace(/^\\d+\\.\\s*/g, ''));
+                if (!h2ElementClass.contains('summary'))
+                    h2Element.classList.add('summary');
 
-                    if (!h2Element.hasAttribute('id'))
-                        h2Element.setAttribute('id', `${section.getAttribute('id')}-q${i + 1}`);
-                }
+                if (!h2Element.hasAttribute('data-summary'))
+                    h2Element.setAttribute('data-summary', h2Element.textContent.trim().replace(/^\d+\.\s*/g, ''));
 
-                if (section.style.display === 'block') {
-                    const summaries = section.querySelectorAll('.summary');
-                    summaries.forEach((elem) => {
-                        const summary = elem.getAttribute('data-summary');
-                        const li = document.createElement('li');
-                        const a = document.createElement('a');
-                        a.textContent = summary;
-                        a.href = `#${elem.getAttribute('id')}`;
-                        li.appendChild(a);
-                        summaryUL.appendChild(li);
-                    });
-                }
+                if (!h2Element.hasAttribute('id'))
+                    h2Element.setAttribute('id', `${visibleSection.getAttribute('id')}-q${i + 1}`);
             }
+
+            const summaries = visibleSection.querySelectorAll('h2.summary');
+            summaries.forEach((elem) => {
+                const summary = elem.getAttribute('data-summary');
+                if (summary && summary.trim()) {
+                    const li = document.createElement('li');
+                    const a = document.createElement('a');
+                    a.textContent = summary;
+                    a.href = `#${elem.getAttribute('id')}`;
+                    li.appendChild(a);
+                    summaryUL.appendChild(li);
+                }
+            });
         }
 
         function showSection(targetID) {
             const section = document.querySelector(`#${targetID}`);
             let pageTitle = targetID.replace('content-', '');
-            
-            // Try to extract the first h1 or h2 heading from the section content
+
+            // Try to get the h1 title from data attribute or fallback to h1 in content
             if (section) {
-                const firstHeading = section.querySelector('h1, h2');
-                if (firstHeading) {
-                    pageTitle = firstHeading.textContent || pageTitle;
+                const h1Title = section.getAttribute('data-h1-title');
+                if (h1Title) {
+                    pageTitle = h1Title;
+                } else {
+                    const firstHeading = section.querySelector('h1');
+                    if (firstHeading) {
+                        pageTitle = firstHeading.textContent || pageTitle;
+                    }
                 }
             }
 
@@ -307,6 +314,16 @@
 
             sections.forEach((section) => {
                 section.style.display = section.getAttribute('id') === targetID ? 'block' : 'none';
+            });
+
+            // Update active state in navbar
+            const allNavItems = document.querySelectorAll('#navbar-list > md-list-item');
+            allNavItems.forEach((item) => {
+                if (item.getAttribute('id') === targetID.replace('content', 'btn')) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
             });
 
             generateSummaries();
@@ -319,7 +336,17 @@
             }, 300);
         }
 
-        sections.forEach((section, index) => section.style.display = index === 0 ? 'block' : 'none');
+        sections.forEach((section, index) => {
+            section.style.display = index === 0 ? 'block' : 'none';
+            // Set initial active state
+            if (index === 0) {
+                const firstSectionId = section.getAttribute('id');
+                const firstNavItem = document.querySelector(`#${firstSectionId.replace('content', 'btn')}`);
+                if (firstNavItem) {
+                    firstNavItem.classList.add('active');
+                }
+            }
+        });
         generateSummaries();
     </script>
 </body>
